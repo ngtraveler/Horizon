@@ -1,0 +1,59 @@
+name: Feishu 快讯推送
+
+# 每小时抓一次源，把新条目翻译成中文，推到飞书群机器人。
+# 不依赖任何本地机器或服务器，全部在 GitHub 的 runner 上跑。
+
+on:
+  schedule:
+    - cron: "5 * * * *" # 每小时第 5 分钟；想 30 分钟一次改成 "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write # 把去重状态提交回仓库，避免重复推送
+
+concurrency:
+  group: feishu-push
+  cancel-in-progress: false
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 检查配置
+        run: |
+          # data/config.json 在 Horizon 的 .gitignore 里；网页上传不受影响，
+          # 如果用命令行提交过，记得 git add -f data/config.json
+          if [ ! -f data/config.json ] && [ -f data/config.marine.json ]; then
+            cp data/config.marine.json data/config.json
+            echo "用 data/config.marine.json 补齐 data/config.json"
+          fi
+          test -f data/config.json || { echo "缺少 data/config.json"; exit 1; }
+          test -f profiles/marine/profile.json || { echo "缺少 profiles/marine/"; exit 1; }
+
+      - name: 采集 + 翻译 + 推送
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          HORIZON_WEBHOOK_URL: ${{ secrets.HORIZON_WEBHOOK_URL }}
+        run: |
+          python dashboard/push-feishu.py --collect --hours 2 --limit 8
+
+      - name: 保存去重状态
+        if: always()
+        run: |
+          if [ -n "$(git status --porcelain data/pushed.json)" ]; then
+            git config user.name "horizon-bot"
+            git config user.email "horizon-bot@users.noreply.github.com"
+            git add -f data/pushed.json
+            git commit -m "chore: update pushed state [skip ci]"
+            git push
+          else
+            echo "state unchanged"
+          fi
