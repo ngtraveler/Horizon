@@ -1,0 +1,61 @@
+name: Horizon 每日日报
+
+# 每天 07:30（香港时间）跑一次完整流水线：抓取 → 评分 → 去重 → 中文日报 → 飞书卡片。
+# cron 用 UTC：07:30 HKT = 23:30 UTC 前一天。
+
+on:
+  schedule:
+    - cron: "30 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: horizon-daily
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: 检查配置
+        run: |
+          if [ ! -f data/config.json ] && [ -f data/config.marine.json ]; then
+            cp data/config.marine.json data/config.json
+            echo "用 data/config.marine.json 补齐 data/config.json"
+          fi
+          test -f data/config.json || { echo "缺少 data/config.json"; exit 1; }
+          test -f profiles/marine/profile.json || { echo "缺少 profiles/marine/"; exit 1; }
+
+      - name: 安装依赖
+        run: uv sync
+
+      - name: 生成日报并推送飞书
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          HORIZON_WEBHOOK_URL: ${{ secrets.HORIZON_WEBHOOK_URL }}
+        run: uv run horizon --hours 24 -l INFO
+
+      - name: 提交日报文件
+        if: always()
+        run: |
+          if [ -n "$(git status --porcelain data/summaries)" ]; then
+            git config user.name "horizon-bot"
+            git config user.email "horizon-bot@users.noreply.github.com"
+            git add -f data/summaries
+            git commit -m "docs: add daily digest [skip ci]"
+            git push
+          else
+            echo "no new digest"
+          fi
