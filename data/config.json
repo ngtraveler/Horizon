@@ -1,0 +1,408 @@
+{
+  "ai": {
+    "provider": "deepseek",
+    "model": "deepseek-chat",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "temperature": 0.3,
+    "max_tokens": 4096,
+    "throttle_sec": 0,
+    "analysis_concurrency": 2,
+    "enrichment_concurrency": 1,
+    "languages": [
+      "zh",
+      "en"
+    ]
+  },
+  "processing": {
+    "profiles_dir": "profiles",
+    "default_profile": "marine",
+    "profile_settings": {
+      "marine": {
+        "threshold": 6.0,
+        "topic_dedup": true
+      }
+    }
+  },
+  "display": {
+    "icon_style": "emoji"
+  },
+  "sources": {
+    "github": [
+      {
+        "type": "repo_releases",
+        "owner": "OpenCPN",
+        "repo": "OpenCPN",
+        "enabled": true,
+        "category": "equipment",
+        "profile": "marine"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "SignalK",
+        "repo": "signalk-server",
+        "enabled": true,
+        "category": "equipment",
+        "profile": "marine"
+      },
+      {
+        "type": "user_events",
+        "username": "OpenCPN",
+        "enabled": false,
+        "category": "equipment",
+        "profile": "marine"
+      }
+    ],
+    "hackernews": {
+      "enabled": false,
+      "fetch_top_stories": 20,
+      "min_score": 100,
+      "category": "tech",
+      "profile": "marine"
+    },
+    "rss": [
+      {
+        "name": "Trade Only Today",
+        "url": "https://www.tradeonlytoday.com/feed/",
+        "enabled": true,
+        "category": "trade",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Boating Industry",
+        "url": "https://boatingindustry.com/feed/",
+        "enabled": true,
+        "category": "trade",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Marine Industry News",
+        "url": "https://marineindustrynews.co.uk/feed/",
+        "enabled": true,
+        "category": "trade",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Marine Business (AU)",
+        "url": "https://www.marinebusiness.com.au/feed",
+        "enabled": true,
+        "category": "trade",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Soundings",
+        "url": "https://www.soundingsonline.com/rss",
+        "enabled": true,
+        "category": "yacht",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Motor Boat & Yachting",
+        "url": "https://www.mby.com/feed",
+        "enabled": true,
+        "category": "yacht",
+        "profile": "marine"
+      },
+      {
+        "name": "Boating Magazine",
+        "url": "https://www.boatingmag.com/feed/",
+        "enabled": false,
+        "category": "yacht",
+        "profile": "marine"
+      },
+      {
+        "name": "Yachting World",
+        "url": "https://www.yachtingworld.com/feed",
+        "enabled": true,
+        "category": "sailing",
+        "profile": "marine"
+      },
+      {
+        "name": "Sail Magazine",
+        "url": "https://www.sailmagazine.com/rss",
+        "enabled": true,
+        "category": "sailing",
+        "profile": "marine"
+      },
+      {
+        "name": "Sailing World",
+        "url": "https://www.sailingworld.com/feed/",
+        "enabled": true,
+        "category": "sailing",
+        "profile": "marine"
+      },
+      {
+        "name": "Yachts & Yachting",
+        "url": "https://www.yachtsandyachting.com/rss",
+        "enabled": true,
+        "category": "sailing",
+        "profile": "marine"
+      },
+      {
+        "name": "Sailing Scuttlebutt",
+        "url": "https://www.sailingscuttlebutt.com/feed/",
+        "enabled": true,
+        "category": "sailing",
+        "profile": "marine"
+      },
+      {
+        "name": "Yachting Monthly",
+        "url": "https://www.yachtingmonthly.com/feed",
+        "enabled": false,
+        "category": "sailing",
+        "profile": "marine"
+      },
+      {
+        "name": "Classic Boat",
+        "url": "https://www.classicboat.co.uk/feed",
+        "enabled": false,
+        "category": "sailing",
+        "profile": "marine"
+      },
+      {
+        "name": "Panbo (marine electronics)",
+        "url": "https://panbo.com/feed/",
+        "enabled": true,
+        "category": "equipment",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Practical Boat Owner",
+        "url": "https://www.pbo.co.uk/feed",
+        "enabled": true,
+        "category": "equipment",
+        "profile": "marine"
+      },
+      {
+        "name": "Garmin Newsroom",
+        "url": "https://www.garmin.com/en-US/newsroom/feed/",
+        "enabled": true,
+        "category": "equipment",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Victron Energy Blog",
+        "url": "https://www.victronenergy.com/blog/feed/",
+        "enabled": true,
+        "category": "equipment",
+        "profile": "marine"
+      },
+      {
+        "name": "Seatrade Maritime",
+        "url": "https://www.seatrade-maritime.com/rss.xml",
+        "enabled": true,
+        "category": "maritime",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "gCaptain",
+        "url": "https://gcaptain.com/feed/",
+        "enabled": true,
+        "category": "maritime",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Splash 247",
+        "url": "https://splash247.com/feed/",
+        "enabled": false,
+        "category": "maritime",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      },
+      {
+        "name": "Offshore Energy",
+        "url": "https://www.offshore-energy.biz/feed/",
+        "enabled": false,
+        "category": "maritime",
+        "content_extractor": "trafilatura",
+        "profile": "marine"
+      }
+    ],
+    "reddit": {
+      "enabled": true,
+      "fetch_comments": 5,
+      "subreddits": [
+        {
+          "subreddit": "sailing",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 20,
+          "min_score": 10,
+          "category": "community",
+          "profile": "marine"
+        },
+        {
+          "subreddit": "yachting",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 15,
+          "min_score": 5,
+          "category": "community",
+          "profile": "marine"
+        },
+        {
+          "subreddit": "boating",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 15,
+          "min_score": 5,
+          "category": "community",
+          "profile": "marine"
+        },
+        {
+          "subreddit": "sailboats",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 10,
+          "min_score": 3,
+          "category": "community",
+          "profile": "marine"
+        },
+        {
+          "subreddit": "marineelectronics",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 10,
+          "min_score": 3,
+          "category": "community",
+          "profile": "marine"
+        },
+        {
+          "subreddit": "Boatbuilding",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 10,
+          "min_score": 3,
+          "category": "community",
+          "profile": "marine"
+        }
+      ],
+      "users": []
+    },
+    "telegram": {
+      "enabled": false,
+      "channels": []
+    },
+    "twitter": {
+      "enabled": false,
+      "users": [
+        "superyachttimes",
+        "boatinternational",
+        "panbo",
+        "garmin"
+      ],
+      "keywords": [
+        "marine electronics",
+        "electric boat launch",
+        "superyacht order"
+      ],
+      "fetch_limit": 10,
+      "fetch_reply_text": false,
+      "max_replies_per_tweet": 3,
+      "max_tweets_to_expand": 10,
+      "reply_min_likes": 5,
+      "category": "social",
+      "profile": "marine"
+    },
+    "gdelt": {
+      "enabled": false,
+      "query": "yacht",
+      "mode": "ArtList",
+      "max_records": 50,
+      "category": "yacht",
+      "profile": "marine"
+    },
+    "google_news": {
+      "enabled": true,
+      "query": "(site:superyachttimes.com OR site:megayachtnews.com OR site:boatinternational.com OR site:ibinews.com OR site:superyachtnews.com OR site:maritime-executive.com)",
+      "language": "en",
+      "country": "US",
+      "ceid": "US:en",
+      "max_results": 60,
+      "category": "premium",
+      "profile": "marine"
+    }
+  },
+  "collection": {
+    "time_window_hours": 24
+  },
+  "digest": {
+    "max_items": 20,
+    "profile_order": [
+      "marine"
+    ],
+    "category_groups": {
+      "yacht": {
+        "name": "Yachts & Boatbuilding",
+        "limit": 7,
+        "categories": [
+          "yacht"
+        ]
+      },
+      "sailing": {
+        "name": "Sailing",
+        "limit": 5,
+        "categories": [
+          "sailing"
+        ]
+      },
+      "equipment": {
+        "name": "Marine Equipment & Electronics",
+        "limit": 5,
+        "categories": [
+          "equipment"
+        ]
+      },
+      "trade": {
+        "name": "Trade & Market",
+        "limit": 4,
+        "categories": [
+          "trade"
+        ]
+      },
+      "maritime": {
+        "name": "Maritime Context",
+        "limit": 3,
+        "categories": [
+          "maritime"
+        ]
+      },
+      "premium": {
+        "name": "Superyacht & Trade Press",
+        "limit": 6,
+        "categories": [
+          "premium"
+        ]
+      }
+    },
+    "group_by": "category",
+    "default_group": "community",
+    "default_group_limit": 3
+  },
+  "webhook": {
+    "enabled": true,
+    "url_env": "HORIZON_WEBHOOK_URL",
+    "delivery": "summary",
+    "overview_position": "first",
+    "platform": "feishu",
+    "layout": "collapsible",
+    "fallback_layout": "markdown",
+    "languages": [
+      "zh"
+    ]
+  }
+}
