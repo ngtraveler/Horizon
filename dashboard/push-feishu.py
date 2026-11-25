@@ -80,14 +80,12 @@ def resolve_base_url(ai_config):
     return DEFAULT_BASE_URLS.get(provider, DEFAULT_BASE_URLS["deepseek"])
 
 
-def post_json(url, payload, timeout=25):
+def post_json(url, payload, timeout=25, headers=None):
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    request = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json; charset=utf-8"},
-        method="POST",
-    )
+    merged = {"Content-Type": "application/json; charset=utf-8", "Accept": "application/json"}
+    if headers:
+        merged.update(headers)
+    request = urllib.request.Request(url, data=data, headers=merged, method="POST")
     with urllib.request.urlopen(request, timeout=timeout) as response:
         body = response.read().decode("utf-8", "replace")
     try:
@@ -126,6 +124,7 @@ def translate(items, ai_config):
             url,
             body,
             timeout=60,
+            headers={"Authorization": "Bearer {}".format(api_key)},
         )
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:300]
@@ -205,6 +204,78 @@ def build_card(items, translations, title):
     }
 
 
+
+def detect_platform(url):
+    """Pick the payload format from the webhook host."""
+    return "dingtalk" if "dingtalk" in url.lower() else "feishu"
+
+
+def build_dingtalk(items, translations, title):
+    """DingTalk custom-robot markdown message (keyword security needs 'Horizon' in text)."""
+    lines = ["### {}".format(title), ""]
+    for index, item in enumerate(items):
+        translated = translations.get(index) or {}
+        zh_title = translated.get("title") or item["title"]
+        when = datetime.fromtimestamp(item["published_ts"]).strftime("%m-%d %H:%M")
+        lines.append("**{}. {}**".format(index + 1, zh_title))
+        if translated.get("note"):
+            lines.append(translated["note"])
+        if translated:
+            lines.append("原文：{}".format(item["title"]))
+        lines.append("{} · {}　[阅读原文]({})".format(item["source"], when, item["url"]))
+        lines.append("")
+    lines.append("—— Horizon 自动采集")
+    return {
+        "msgtype": "markdown",
+        "markdown": {"title": title, "text": "\n".join(lines)[:12000]},
+    }
+
+
+def resolve_channels(url_envs):
+    """Every env var that holds a non-empty URL becomes a delivery channel."""
+    channels = []
+    for name in url_envs:
+        url = (os.environ.get(name) or "").strip()
+        if url:
+            channels.append({"env": name, "url": url, "platform": detect_platform(url)})
+    return channels
+
+
+def check_ok(response):
+    code = response.get("code", response.get("StatusCode", response.get("errcode")))
+    return code in (0, None), code
+
+
+def deliver(channels, items, translations, title, dry_run):
+    """Send the same content to every channel. Returns how many succeeded."""
+    sent = 0
+    for channel in channels:
+        if channel["platform"] == "dingtalk":
+            payload = build_dingtalk(items, translations, title)
+        else:
+            payload = build_card(items, translations, title)
+        if dry_run:
+            print("\n--- {} ({}) 将发送的 JSON ---".format(channel["env"], channel["platform"]))
+            print(json.dumps(payload, ensure_ascii=False, indent=2)[:3000])
+            continue
+        try:
+            response = post_json(channel["url"], payload)
+        except Exception as exc:  # noqa: BLE001
+            print("! {} 发送失败：{}: {}".format(channel["env"], type(exc).__name__, exc))
+            continue
+        good, code = check_ok(response)
+        if good:
+            sent += 1
+            print("✓ {}（{}）已发送".format(channel["env"], channel["platform"]))
+        else:
+            print(
+                "! {}（{}）返回错误 code={}：{}".format(
+                    channel["env"], channel["platform"], code,
+                    json.dumps(response, ensure_ascii=False)[:300],
+                )
+            )
+    return sent
+
 def load_state(path):
     if not os.path.isfile(path):
         return {}
@@ -240,7 +311,12 @@ def main(argv=None):
     parser.add_argument("--hours", type=float, default=6, help="只看最近 N 小时的内容")
     parser.add_argument("--limit", type=int, default=8, help="单条卡片最多几条")
     parser.add_argument("--title", default="🌅 船艇行业快讯")
-    parser.add_argument("--url-env", default="HORIZON_WEBHOOK_URL")
+    parser.add_argument(
+        "--url-env",
+        action="append",
+        default=None,
+        help="读 webhook 地址的环境变量，可重复：--url-env HORIZON_WEBHOOK_URL --url-env DINGTALK_WEBHOOK_URL",
+    )
     parser.add_argument("--no-translate", action="store_true")
     parser.add_argument("--collect", action="store_true", help="先运行 collect.py 再推送")
     parser.add_argument("--dry-run", action="store_true", help="打印卡片 JSON，不发送、不改状态")
@@ -250,6 +326,8 @@ def main(argv=None):
         help="只发一张测试卡片：同时验证模型 Key 和飞书机器人，不采集、不改状态",
     )
     args = parser.parse_args(argv)
+    if not args.url_env:
+        args.url_env = ["HORIZON_WEBHOOK_URL"]
 
     load_env_file(args.env_file)
 
@@ -273,25 +351,14 @@ def main(argv=None):
         translations = {} if args.no_translate else translate(sample, ai_config)
         if not args.no_translate and not translations:
             print("  翻译没有成功 —— Key 或额度有问题（见上面那行报错）")
-        card = build_card(sample, translations, "🧪 Marine Radar 测试卡片")
-        if args.dry_run:
-            print(json.dumps(card, ensure_ascii=False, indent=2))
-            return 0
-        url = (os.environ.get(args.url_env) or "").strip()
-        if not url:
-            print("! 环境变量 {} 为空，无法发送".format(args.url_env))
+        channels = resolve_channels(args.url_env)
+        if not channels:
+            print("! 没有可用的 webhook：设置 {} 后重试".format(" 或 ".join(args.url_env)))
             return 2
-        try:
-            response = post_json(url, card)
-        except Exception as exc:  # noqa: BLE001
-            print("! 发送失败：{}: {}".format(type(exc).__name__, exc))
-            return 1
-        code = response.get("code", response.get("StatusCode"))
-        if code not in (0, None):
-            print("! 飞书返回错误：{}".format(json.dumps(response, ensure_ascii=False)[:300]))
-            return 1
-        print("✓ 测试卡片已发送，去飞书群里看看")
-        return 0
+        sent = deliver(channels, sample, translations, "🧪 Marine Radar 测试卡片", args.dry_run)
+        if args.dry_run:
+            return 0
+        return 0 if sent else 1
 
     if args.collect:
         cmd = [sys.executable, os.path.join(HERE, "collect.py"), "-c", args.config,
@@ -334,38 +401,30 @@ def main(argv=None):
         print("  翻译成功 {} 条".format(len(translations)))
 
     stamp = datetime.now().strftime("%m-%d %H:%M")
-    card = build_card(selected, translations, "{} · {}".format(args.title, stamp))
+    title = "{} · {}".format(args.title, stamp)
+    channels = resolve_channels(args.url_env)
+    if not channels:
+        print("! 没有可用的 webhook：设置 {} 后重试".format(" 或 ".join(args.url_env)))
+        return 2
+
+    sent = deliver(channels, selected, translations, title, args.dry_run)
 
     if args.dry_run:
-        print("\n--- 卡片 JSON（未发送）---")
-        print(json.dumps(card, ensure_ascii=False, indent=2)[:4000])
         print("\n--- 预览 ---")
         for index, item in enumerate(selected):
             zh = (translations.get(index) or {}).get("title") or item["title"]
             print("  {}. {}".format(index + 1, zh))
         return 0
 
-    url = (os.environ.get(args.url_env) or "").strip()
-    if not url:
-        print("! 环境变量 {} 为空，无法发送。请在 .env 里填入飞书 webhook 地址".format(args.url_env))
-        return 2
-
-    try:
-        response = post_json(url, card)
-    except Exception as exc:  # noqa: BLE001
-        print("! 发送失败：{}: {}".format(type(exc).__name__, exc))
+    if sent == 0:
+        print("! 所有渠道都发送失败，不更新去重状态")
         return 1
 
-    code = response.get("code", response.get("StatusCode"))
-    if code not in (0, None):
-        print("! 飞书返回错误：{}".format(json.dumps(response, ensure_ascii=False)[:300]))
-        return 1
-
-    now = time.time()
+    now_ts = time.time()
     for item in selected:
-        pushed[item["id"]] = now
+        pushed[item["id"]] = now_ts
     save_state(args.state, pushed)
-    print("✓ 已发送 {} 条，状态写入 {}".format(len(selected), args.state))
+    print("✓ 已发送 {} 条（{} 个渠道成功），状态写入 {}".format(len(selected), sent, args.state))
     return 0
 
 

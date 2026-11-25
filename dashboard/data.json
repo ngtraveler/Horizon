@@ -1,0 +1,189 @@
+{
+ "generated_at": "2026-11-25T16:25:27+08:00",
+ "generated_ts": 1795595127.325063,
+ "window_hours": 2,
+ "stats": {
+  "items": 3,
+  "sources_ok": 18,
+  "sources_total": 18
+ },
+ "sources": [
+  {
+   "name": "Trade Only Today",
+   "category": "trade",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 360
+  },
+  {
+   "name": "Boating Industry",
+   "category": "trade",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 200
+  },
+  {
+   "name": "Marine Industry News",
+   "category": "trade",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 1585
+  },
+  {
+   "name": "Marine Business (AU)",
+   "category": "trade",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 3785
+  },
+  {
+   "name": "Soundings",
+   "category": "yacht",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 837
+  },
+  {
+   "name": "Motor Boat & Yachting",
+   "category": "yacht",
+   "count": 1,
+   "ok": true,
+   "error": "",
+   "ms": 283
+  },
+  {
+   "name": "Yachting World",
+   "category": "sailing",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 202
+  },
+  {
+   "name": "Sail Magazine",
+   "category": "sailing",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 356
+  },
+  {
+   "name": "Sailing World",
+   "category": "sailing",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 1147
+  },
+  {
+   "name": "Yachts & Yachting",
+   "category": "sailing",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 1878
+  },
+  {
+   "name": "Sailing Scuttlebutt",
+   "category": "sailing",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 216
+  },
+  {
+   "name": "Panbo (marine electronics)",
+   "category": "equipment",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 1698
+  },
+  {
+   "name": "Practical Boat Owner",
+   "category": "equipment",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 222
+  },
+  {
+   "name": "Garmin Newsroom",
+   "category": "equipment",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 529
+  },
+  {
+   "name": "Victron Energy Blog",
+   "category": "equipment",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 484
+  },
+  {
+   "name": "Seatrade Maritime",
+   "category": "maritime",
+   "count": 1,
+   "ok": true,
+   "error": "",
+   "ms": 659
+  },
+  {
+   "name": "gCaptain",
+   "category": "maritime",
+   "count": 0,
+   "ok": true,
+   "error": "",
+   "ms": 207
+  },
+  {
+   "name": "Google News / trade press",
+   "category": "premium",
+   "count": 1,
+   "ok": true,
+   "error": "",
+   "ms": 1538
+  }
+ ],
+ "digest": null,
+ "items": [
+  {
+   "title": "85m Silver Yachts explorer yacht Bold in Kiel Canal",
+   "url": "https://news.google.com/rss/articles/CBMigAFBVV95cUxNSm5laVpMTEl3aHBzdHhteGNFa1hmc2xicnlMeGNmNzFLX0ZZak9QVlZvN1hud3d2cVFzQmhKUGtPZnVJZ3A2T0RDMEJUaExCZnZOaVlod1ZWNWp0OXlheTIyTVF1N2NvYXFpeWJEMVR2SHgwWUVVYk1hZHpDVTNDSA?oc=5",
+   "source": "SuperYacht Times",
+   "category": "premium",
+   "published": "2026-11-25T08:14:42+00:00",
+   "published_ts": 1795594482.0,
+   "summary": "85m Silver Yachts explorer yacht Bold in Kiel Canal SuperYacht Times",
+   "id": "ad89ceb4f543"
+  },
+  {
+   "title": "Houthis threaten Saudi ports as four ships attacked near Hormuz",
+   "url": "https://www.seatrade-maritime.com/security/houthis-threaten-saudi-ports-as-four-ships-attacked-near-hormuz",
+   "source": "Seatrade Maritime",
+   "category": "maritime",
+   "published": "2026-11-25T08:05:58+00:00",
+   "published_ts": 1795593958.0,
+   "summary": "Saudi-led coalition airstrikes on Hodeidah prompt Houthi threats against Red Sea ports as fresh attacks on merchant shipping are reported in the Gulf.",
+   "id": "bc004a502dd1"
+  },
+  {
+   "title": "Why our Scottish boating breakdown became our best trip yet",
+   "url": "https://www.mby.com/cruising/why-our-scottish-boating-breakdown-became-our-best-trip-yet-140980",
+   "source": "Motor Boat & Yachting",
+   "category": "yacht",
+   "published": "2026-11-25T06:58:40+00:00",
+   "published_ts": 1795589920.0,
+   "summary": "Every great boating adventure begins long before the lines are slipped. Ours started at 0900 as we left our storage yard at Avonmouth, Bristol, towing our Cormate, Viva la Vida , north towards Scotland. Apart from a single stop at the services north of Liverpool, the journey passed easily and, by mid afternoon we were checking into the Westmorland Hotel at Tebay Services. After the long drive, a w",
+   "id": "0e6b46dd1a54"
+  }
+ ]
+}

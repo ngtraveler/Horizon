@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+<title>Marine Radar · 游艇与海事监控</title>
+<style>
+  :root {
+    --bg: #070c15;
+    --panel: #0e1626;
+    --panel-2: #121d31;
+    --line: #1e2c45;
+    --text: #e8eefc;
+    --dim: #8fa2c2;
+    --hot: #ff5c5c;
+    --ok: #33d68a;
+    --warn: #ffb020;
+    --yacht: #6ea8fe;
+    --sailing: #43d9c0;
+    --equipment: #ffd166;
+    --trade: #b28dff;
+    --maritime: #7bd389;
+    --premium: #ff8fab;
+    --other: #9fb3c8;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: radial-gradient(1200px 600px at 20% -10%, #10203a 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { display: flex; flex-direction: column; }
+
+  header {
+    display: flex; align-items: center; gap: 28px;
+    padding: 14px 26px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: baseline; gap: 12px; }
+  .brand h1 {
+    font-size: 22px; margin: 0; letter-spacing: 3px; font-weight: 650;
+  }
+  .brand span { color: var(--dim); font-size: 14px; letter-spacing: 1px; }
+  .spacer { flex: 1; }
+  .clock { text-align: right; line-height: 1.05; }
+  .clock .time {
+    font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+  }
+  .clock .date { font-size: 13px; color: var(--dim); letter-spacing: 1px; }
+
+  .status { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--dim); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--line); background: var(--panel);
+    padding: 6px 11px; border-radius: 999px; white-space: nowrap;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+  .dot.bad { background: var(--hot); box-shadow: 0 0 10px var(--hot); }
+  .dot.stale { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+  .pill.warn { color: var(--warn); border-color: rgba(255,176,32,.5); }
+
+  main {
+    flex: 1; min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 1fr 1fr;
+    gap: 14px;
+    padding: 14px 18px 8px;
+  }
+
+  .lane {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: flex; flex-direction: column;
+    min-height: 0; overflow: hidden;
+    position: relative;
+  }
+  .lane::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: var(--accent, var(--other)); opacity: .85;
+  }
+  .lane-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px 8px;
+    border-bottom: 1px solid rgba(30,44,69,.7);
+  }
+  .lane-head .name { font-size: 16px; font-weight: 600; letter-spacing: .5px; }
+  .lane-head .en { font-size: 11px; color: var(--dim); letter-spacing: 1.4px; text-transform: uppercase; }
+  .lane-head .count {
+    margin-left: auto; font-size: 12px; color: var(--dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .lane-body { flex: 1; min-height: 0; overflow: hidden; padding: 6px 14px 12px; }
+  .lane-list { transition: transform 700ms ease-in-out; }
+
+  .item { padding: 9px 0 10px; border-bottom: 1px dashed rgba(30,44,69,.65); }
+  .item:last-child { border-bottom: 0; }
+  .item .meta {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11.5px; color: var(--dim); letter-spacing: .4px;
+  }
+  .item .src { color: var(--accent, var(--other)); font-weight: 600; }
+  .item .title {
+    margin-top: 3px; font-size: 15.5px; line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .item.fresh .title { color: #fff; }
+  .badge {
+    margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: #0a1020; background: var(--hot); border-radius: 4px; padding: 1px 5px;
+  }
+
+  .digest .lane-body { overflow-y: auto; }
+  .digest ol { margin: 4px 0 0; padding-left: 20px; }
+  .digest li { font-size: 14.5px; line-height: 1.45; margin-bottom: 9px; color: #d8e3f6; }
+  .digest .note { color: var(--dim); font-size: 13px; line-height: 1.6; }
+  .digest code { color: var(--equipment); }
+
+  footer {
+    display: flex; align-items: center; gap: 14px;
+    padding: 6px 26px 10px; font-size: 12px; color: var(--dim);
+  }
+  .health { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px;
+    font-size: 11px; color: var(--dim);
+  }
+  .chip.ok { color: var(--ok); border-color: rgba(51,214,138,.35); }
+  .chip.bad { color: var(--hot); border-color: rgba(255,92,92,.45); }
+  .hint { color: var(--warn); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>MARINE RADAR</h1>
+      <span>游艇 · 帆船 · 海事 · 船用电子</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="status">
+      <span class="pill"><span class="dot" id="dot"></span><span id="health-text">连接中…</span></span>
+      <span class="pill" id="refresh-pill">刷新 60s</span>
+      <span class="pill" id="age-pill">—</span>
+    </div>
+    <div class="clock">
+      <div class="time" id="clock-time">--:--:--</div>
+      <div class="date" id="clock-date"></div>
+    </div>
+  </header>
+
+  <main id="lanes"></main>
+
+  <footer>
+    <span id="footer-note">数据来自 Horizon 的同一份源清单</span>
+    <div class="spacer"></div>
+    <div class="health" id="health"></div>
+  </footer>
+
+<script>
+const LANES = [
+  { key: "yacht",     zh: "游艇 / 超艇", en: "Yachts & Boatbuilding", color: "var(--yacht)" },
+  { key: "sailing",   zh: "帆船 / 航海", en: "Sailing", color: "var(--sailing)" },
+  { key: "equipment", zh: "船用电子 / 装备", en: "Equipment & Electronics", color: "var(--equipment)" },
+  { key: "trade",     zh: "行业 / 市场", en: "Trade & Market", color: "var(--trade)" },
+  { key: "premium",   zh: "头部媒体", en: "Trade Press", color: "var(--premium)" },
+  { key: "maritime",  zh: "海事 / 航运", en: "Maritime", color: "var(--maritime)" },
+  { key: "other",     zh: "社区 / 其他", en: "Community & Others", color: "var(--other)" }
+];
+
+const REFRESH_MS = 60000;
+const FRESH_MS = 45 * 60 * 1000;
+const STALE_MS = 60 * 60 * 1000;   // 采集器一小时没动静就把状态点亮黄
+let countdown = REFRESH_MS / 1000;
+let lastGenerated = null;
+let lastPayload = null;
+let fetchFailed = false;
+
+function pad(n) { return String(n).padStart(2, "0"); }
+
+function tickClock() {
+  const now = new Date();
+  document.getElementById("clock-time").textContent =
+    pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+  const week = ["周日","周一","周二","周三","周四","周五","周六"][now.getDay()];
+  document.getElementById("clock-date").textContent =
+    now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + " " + week;
+}
+
+function hhmm(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return "--:--";
+  return pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function buildLane(lane) {
+  const section = el("section", "lane");
+  section.style.setProperty("--accent", lane.color);
+  const head = el("div", "lane-head");
+  const wrap = el("div");
+  wrap.appendChild(el("div", "name", lane.zh));
+  wrap.appendChild(el("div", "en", lane.en));
+  head.appendChild(wrap);
+  const count = el("div", "count", "0");
+  head.appendChild(count);
+  const body = el("div", "lane-body");
+  const list = el("div", "lane-list");
+  body.appendChild(list);
+  section.appendChild(head);
+  section.appendChild(body);
+  return { section, head, body, list, count, key: lane.key };
+}
+
+function buildDigestLane() {
+  const section = el("section", "lane digest");
+  section.style.setProperty("--accent", "#8fd3ff");
+  const head = el("div", "lane-head");
+  const wrap = el("div");
+  wrap.appendChild(el("div", "name", "Horizon 今日精选"));
+  wrap.appendChild(el("div", "en", "AI Curated Digest"));
+  head.appendChild(wrap);
+  const count = el("div", "count", "");
+  head.appendChild(count);
+  const body = el("div", "lane-body");
+  section.appendChild(head);
+  section.appendChild(body);
+  return { section, body, count };
+}
+
+const lanes = {};
+let digestLane = null;
+
+function setup() {
+  const main = document.getElementById("lanes");
+  LANES.forEach((lane) => {
+    const built = buildLane(lane);
+    lanes[lane.key] = built;
+    main.appendChild(built.section);
+  });
+  digestLane = buildDigestLane();
+  main.appendChild(digestLane.section);
+}
+
+function renderDigest(digest) {
+  const body = digestLane.body;
+  body.textContent = "";
+  if (!digest || !digest.titles || !digest.titles.length) {
+    const note = el("div", "note");
+    note.innerHTML =
+      "还没有可用日报。先跑一次<br><code>uv run horizon</code><br>生成的 Markdown 会出现在这里。";
+    body.appendChild(note);
+    digestLane.count.textContent = "—";
+    return;
+  }
+  digestLane.count.textContent = digest.date || "";
+  const list = el("ol");
+  digest.titles.forEach((title) => list.appendChild(el("li", null, title)));
+  body.appendChild(list);
+}
+
+function renderItem(item) {
+  const row = el("div", "item");
+  if (Date.now() - item.published_ts < FRESH_MS) row.classList.add("fresh");
+  const meta = el("div", "meta");
+  meta.appendChild(el("span", null, hhmm(item.published)));
+  meta.appendChild(el("span", "src", item.source));
+  if (Date.now() - item.published_ts < FRESH_MS) meta.appendChild(el("span", "badge", "NEW"));
+  const title = el("div", "title", item.title);
+  row.appendChild(meta);
+  row.appendChild(title);
+  row.title = item.title;
+  return row;
+}
+
+function rotateLane(lane) {
+  const list = lane.list;
+  const body = lane.body;
+  if (list.dataset.timer) return;
+  const step = () => {
+    const overflow = list.scrollHeight - body.clientHeight;
+    if (overflow <= 4) return;
+    const first = list.firstElementChild;
+    if (!first) return;
+    const shift = first.getBoundingClientRect().height;
+    const current = parseFloat(list.dataset.offset || "0");
+    const next = current + shift;
+    if (next > overflow + 2) {
+      list.style.transition = "opacity 400ms";
+      list.style.opacity = "0";
+      setTimeout(() => {
+        list.style.transition = "none";
+        list.style.transform = "translateY(0)";
+        list.dataset.offset = "0";
+        list.style.opacity = "1";
+      }, 420);
+    } else {
+      list.style.transition = "transform 700ms ease-in-out";
+      list.style.transform = "translateY(-" + next + "px)";
+      list.dataset.offset = String(next);
+    }
+  };
+  const timer = setInterval(step, 9000);
+  list.dataset.timer = String(timer);
+}
+
+function render(data) {
+  const grouped = {};
+  LANES.forEach((lane) => (grouped[lane.key] = []));
+  data.items.forEach((item) => {
+    const key = grouped[item.category] ? item.category : "other";
+    grouped[key].push(item);
+  });
+
+  LANES.forEach((lane) => {
+    const built = lanes[lane.key];
+    built.list.textContent = "";
+    built.list.style.transform = "translateY(0)";
+    built.list.dataset.offset = "0";
+    const items = grouped[lane.key] || [];
+    built.count.textContent = items.length ? items.length + " 条" : "—";
+    if (!items.length) {
+      built.list.appendChild(el("div", "note", "该分类当前无新内容"));
+      built.list.lastChild.style.color = "var(--dim)";
+      built.list.lastChild.style.fontSize = "13px";
+      return;
+    }
+    items.slice(0, 30).forEach((item) => built.list.appendChild(renderItem(item)));
+    rotateLane(built);
+  });
+
+  renderDigest(data.digest);
+
+  const stats = data.stats || {};
+  const ok = stats.sources_ok || 0;
+  const total = stats.sources_total || 0;
+  const dot = document.getElementById("dot");
+  const allOk = total > 0 && ok === total;
+  dot.className = "dot" + (allOk ? "" : " stale");
+  document.getElementById("health-text").textContent =
+    ok + "/" + total + " 源 · " + (stats.items || 0) + " 条";
+
+  const health = document.getElementById("health");
+  health.textContent = "";
+  (data.sources || []).forEach((source) => {
+    const chip = el("span", "chip " + (source.ok ? "ok" : "bad"),
+      source.ok ? source.name + " " + source.count : source.name + " ✕");
+    if (!source.ok && source.error) chip.title = source.error;
+    health.appendChild(chip);
+  });
+
+  updateAge();
+  const stamp = new Date(data.generated_ts * 1000);
+  document.getElementById("footer-note").textContent =
+    "最近采集 " + pad(stamp.getHours()) + ":" + pad(stamp.getMinutes()) + ":" + pad(stamp.getSeconds()) +
+    " · 窗口 " + data.window_hours + "h · 来源清单 data/config.json";
+}
+
+async function pull() {
+  try {
+    const response = await fetch("data.json?t=" + Date.now(), { cache: "no-store" });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const data = await response.json();
+    fetchFailed = false;
+    lastPayload = data;
+    if (data.generated_ts !== lastGenerated) {
+      lastGenerated = data.generated_ts;
+      render(data);
+    }
+    countdown = REFRESH_MS / 1000;
+    updateAge();
+  } catch (error) {
+    fetchFailed = true;
+    document.getElementById("dot").className = "dot bad";
+    document.getElementById("health-text").textContent = "读取 data.json 失败";
+    const note = document.getElementById("footer-note");
+    note.innerHTML = '<span class="hint">先运行 python3 collect.py 生成 data.json，再用 python3 -m http.server 打开本页</span>';
+  }
+}
+
+function tickCountdown() {
+  countdown -= 1;
+  if (countdown <= 0) countdown = REFRESH_MS / 1000;
+  document.getElementById("refresh-pill").textContent = "刷新 " + countdown + "s";
+  updateAge();
+}
+
+function updateAge() {
+  const pill = document.getElementById("age-pill");
+  if (!lastPayload) {
+    pill.textContent = "—";
+    return;
+  }
+  const ageMs = Date.now() - lastPayload.generated_ts * 1000;
+  const mins = Math.floor(ageMs / 60000);
+  pill.textContent = mins < 1 ? "刚刚采集" : "数据 " + mins + " 分钟前";
+  const stale = ageMs > STALE_MS;
+  pill.classList.toggle("warn", stale);
+  if (stale) document.getElementById("dot").className = "dot stale";
+}
+
+setup();
+tickClock();
+setInterval(tickClock, 1000);
+setInterval(tickCountdown, 1000);
+pull();
+setInterval(pull, REFRESH_MS);
+</script>
+</body>
+</html>
